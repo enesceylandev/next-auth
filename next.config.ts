@@ -1,6 +1,9 @@
 import { NextConfig } from "next/types";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig: NextConfig = {
+  output: isDev ? undefined : "standalone",
   env: {
     NEXT_PUBLIC_BRAND_NAME: process.env.NEXT_PUBLIC_BRAND_NAME,
     AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,

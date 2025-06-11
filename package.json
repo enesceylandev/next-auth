@@ -6,7 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "start:standalone": "NODE_ENV=production cp -r .next/static .next/standalone/.next/ && node .next/standalone/server.js",
+    "lint": "next lint",
+    "docker:build": "NODE_ENV=production docker build -t kayra-export --build-arg NEXT_PUBLIC_BRAND_NAME='Kayra Export' .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env kayra-export",
+    "docker:clean": "docker system prune -af",
+    "docker:restart": "npm run docker:clean && npm run docker:build && npm run docker:run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
