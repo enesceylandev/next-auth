@@ -1,0 +1,50 @@
+[
+  {
+    "title": "Total Revenue",
+    "value": "$950.00",
+    "trend": {
+      "value": 12.5,
+      "isUp": true
+    },
+    "footer": {
+      "message": "Trending up this month",
+      "description": "Visitors for the last 6 months"
+    }
+  },
+  {
+    "title": "New Customers",
+    "value": "1,234",
+    "trend": {
+      "value": 20,
+      "isUp": false
+    },
+    "footer": {
+      "message": "Down 20% this period",
+      "description": "Acquisition needs attention"
+    }
+  },
+  {
+    "title": "Active Accounts",
+    "value": "45,678",
+    "trend": {
+      "value": 12.5,
+      "isUp": true
+    },
+    "footer": {
+      "message": "Strong user retention",
+      "description": "Engagement exceed targets"
+    }
+  },
+  {
+    "title": "Growth Rate",
+    "value": "4.5%",
+    "trend": {
+      "value": 4.5,
+      "isUp": true
+    },
+    "footer": {
+      "message": "Steady performance increase",
+      "description": "Meets growth projections"
+    }
+  }
+]
