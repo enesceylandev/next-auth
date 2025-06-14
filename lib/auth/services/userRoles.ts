@@ -1,69 +1,64 @@
-import { Auth0Role, UserRole } from "@/lib/types/auth";
-import { ManagementTokenService } from "./managementToken";
 import { AUTH0_CONFIG } from "@/lib/config/auth";
+import { ManagementTokenService } from "./managementToken";
+import { UserRole } from "@/lib/types/auth";
+
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
 
 export class UserRolesService {
-  async getUserRoles(userId: string): Promise<Auth0Role[]> {
+  private async getManagementToken(): Promise<string> {
+    return await ManagementTokenService.getInstance().getToken();
+  }
+
+  public async getUserRoles(userId: string): Promise<Role[]> {
     try {
-      const token = await ManagementTokenService.getInstance().getToken();
-      const encodedUserId = encodeURIComponent(userId);
+      const token = await this.getManagementToken();
 
       const response = await fetch(
-        `${process.env.AUTH0_ISSUER}/api/v2/users/${encodedUserId}/roles`,
+        `${process.env.AUTH0_ISSUER}/api/v2/users/${userId}/roles`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to get user roles");
+        const errorData = await response.json();
+        console.error("Error fetching user roles:", {
+          status: response.status,
+          error: errorData,
+        });
+        throw new Error("Failed to fetch user roles");
       }
 
       return await response.json();
     } catch (error) {
-      console.error("Error getting user roles:", error);
-      return [];
-    }
-  }
-
-  async ensureUserHasRole(userId: string): Promise<Auth0Role[]> {
-    try {
-      const userRoles = await this.getUserRoles(userId);
-
-      if (userRoles && userRoles.length > 0) {
-        return userRoles;
-      }
-
-      return await this.changeUserRole(userId, AUTH0_CONFIG.roles.default);
-    } catch (error) {
-      console.error("Error in ensureUserHasRole:", error);
+      console.error("getUserRoles error:", error);
       throw error;
     }
   }
 
-  async changeUserRole(
+  public async changeUserRole(
     userId: string,
-    newRole: UserRole
-  ): Promise<Auth0Role[]> {
+    newRoleId: string
+  ): Promise<Role[]> {
     try {
-      const token = await ManagementTokenService.getInstance().getToken();
-      const encodedUserId = encodeURIComponent(userId);
-
-      // Mevcut rolleri al
+      const token = await this.getManagementToken();
       const currentRoles = await this.getUserRoles(userId);
 
-      // Mevcut rolleri kaldır
+      // Removing current role
       if (currentRoles.length > 0) {
         const removeResponse = await fetch(
-          `${process.env.AUTH0_ISSUER}/api/v2/users/${encodedUserId}/roles`,
+          `${process.env.AUTH0_ISSUER}/api/v2/users/${userId}/roles`,
           {
             method: "DELETE",
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               roles: currentRoles.map(role => role.id),
@@ -72,48 +67,76 @@ export class UserRolesService {
         );
 
         if (!removeResponse.ok) {
-          throw new Error("Failed to remove current roles");
+          const errorData = await removeResponse.json();
+          console.error("Error removing roles:", {
+            status: removeResponse.status,
+            error: errorData,
+          });
+          throw new Error("Failed to remove existing roles");
         }
       }
 
-      // Yeni rolü ata
+      // Adding new role
       const addResponse = await fetch(
-        `${process.env.AUTH0_ISSUER}/api/v2/users/${encodedUserId}/roles`,
+        `${process.env.AUTH0_ISSUER}/api/v2/users/${userId}/roles`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            roles: [AUTH0_CONFIG.roles.ids[newRole]],
+            roles: [newRoleId],
           }),
         }
       );
 
       if (!addResponse.ok) {
+        const errorData = await addResponse.json();
+        console.error("Error adding new role:", {
+          status: addResponse.status,
+          error: errorData,
+        });
         throw new Error("Failed to assign new role");
       }
 
-      // Güncel rolleri al ve dön
       return await this.getUserRoles(userId);
     } catch (error) {
-      console.error("Error changing role:", error);
+      console.error("changeUserRole error:", error);
       throw error;
     }
   }
 
-  mapRolesToUserRoles(roles: Auth0Role[]): UserRole[] {
+  public mapRolesToUserRoles(roles: Role[]): UserRole[] {
     return roles.map(role => {
-      if (!this.isValidUserRole(role.name)) {
-        console.warn(`Invalid role name: ${role.name}`);
-        return AUTH0_CONFIG.roles.default;
-      }
-      return role.name;
+      if (role.name === "Admin") return "Admin" as UserRole;
+      return "User" as UserRole;
     });
   }
 
-  private isValidUserRole(role: string): role is UserRole {
-    return AUTH0_CONFIG.roles.available.includes(role as UserRole);
+  public async hasRole(userId: string, role: UserRole): Promise<boolean> {
+    try {
+      const userRoles = await this.getUserRoles(userId);
+      return userRoles.some(userRole => userRole.name === role);
+    } catch (error) {
+      console.error("hasRole error:", error);
+      return false;
+    }
+  }
+
+  public async ensureUserHasRole(userId: string): Promise<Role[]> {
+    try {
+      const currentRoles = await this.getUserRoles(userId);
+
+      if (currentRoles.length === 0) {
+        await this.changeUserRole(userId, AUTH0_CONFIG.roles.default);
+        return await this.getUserRoles(userId);
+      }
+
+      return currentRoles;
+    } catch (error) {
+      console.error("Error in ensureUserHasRole:", error);
+      return [];
+    }
   }
 }

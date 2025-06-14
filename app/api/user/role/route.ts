@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { UserRolesService } from "@/lib/auth/services/userRoles";
-import { AUTH0_CONFIG } from "@/lib/config/auth";
-import { UserRole } from "@/lib/types/auth";
 
 const userRolesService = new UserRolesService();
 
 export async function PUT(req: NextRequest) {
   try {
-    const { userId, roleId, role } = await req.json();
+    const { userId, roleId } = await req.json();
     const session = await getServerSession();
 
     if (!session?.user) {
@@ -25,40 +23,36 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    if (!role || !roleId) {
+    if (!roleId) {
       return NextResponse.json(
         { success: false, message: "Missing role field" },
         { status: 400 }
       );
     }
 
-    if (!AUTH0_CONFIG.roles.available.includes(role)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid role" },
-        { status: 400 }
-      );
-    }
-
-    const updatedRoles = await userRolesService.changeUserRole(
-      userId,
-      role as UserRole
-    );
+    const updatedRoles = await userRolesService.changeUserRole(userId, roleId);
 
     const mappedRoles = userRolesService.mapRolesToUserRoles(updatedRoles);
 
     return NextResponse.json({
       success: true,
-      message: `Role successfully changed to ${role}`,
+      message: `Role successfully changed.`,
       newRoles: mappedRoles,
       userId: userId,
     });
   } catch (error) {
     console.error("Error in role change API:", error);
+
+    const errorMessage =
+      error instanceof Error
+        ? `${error.message}\n${error.stack}`
+        : "Failed to change role";
+
     return NextResponse.json(
       {
         success: false,
-        message:
-          error instanceof Error ? error.message : "Failed to change role",
+        message: errorMessage,
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );

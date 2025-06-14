@@ -22,20 +22,23 @@ const handler = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (trigger === "update" && session?.user?.roles) {
         token.roles = session.user.roles;
+        return token;
       }
 
       if (user) {
         try {
-          const userId = user.id || token.sub;
+          const userId = token.sub;
+
           if (!userId) {
+            console.error("No user ID found in token:", token);
             throw new Error("User ID not found");
           }
 
           const userRoles = await userRolesService.ensureUserHasRole(userId);
-          token.userId = userId;
           token.roles = userRolesService.mapRolesToUserRoles(userRoles);
         } catch (error) {
           console.error("Error in JWT callback:", error);
+          token.roles = ["User"];
         }
       }
       return token;
@@ -45,26 +48,30 @@ const handler = NextAuth({
         ...session,
         user: {
           ...session.user,
-          id: token.userId,
-          roles: token.roles || [],
+          id: token.sub,
+          roles: token.roles || ["User"],
         },
       };
     },
   },
   events: {
-    async signIn({ user }) {
-      if (user.email) {
+    async signIn({ user, account }) {
+      if (user.email && account?.providerAccountId) {
         try {
-          const userRoles = await userRolesService.ensureUserHasRole(user.id);
+          const userRoles = await userRolesService.ensureUserHasRole(
+            account.providerAccountId
+          );
           user.roles = userRolesService.mapRolesToUserRoles(userRoles);
         } catch (error) {
           console.error("Error updating roles on sign in:", error);
+          user.roles = ["User"];
         }
       }
     },
   },
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 });
 
 export { handler as GET, handler as POST };

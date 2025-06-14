@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
+# development
 FROM node:lts-alpine AS builder
 WORKDIR /app
 

@@ -1,5 +1,5 @@
 import { UserRole } from "@/lib/types/auth";
-import { AUTH_CONFIG } from "@/lib/config/role";
+import { getRoleId } from "@/lib/config/auth";
 import { RoleChangeResponse } from "@/lib/types/user";
 
 export class RoleService {
@@ -8,6 +8,7 @@ export class RoleService {
     newRole: UserRole
   ): Promise<RoleChangeResponse> {
     try {
+      const roleId = await getRoleId(newRole);
       const response = await fetch("/api/user/role", {
         method: "PUT",
         headers: {
@@ -15,8 +16,7 @@ export class RoleService {
         },
         body: JSON.stringify({
           userId,
-          role: newRole,
-          roleId: AUTH_CONFIG.roles.ids[newRole],
+          roleId,
         }),
       });
 

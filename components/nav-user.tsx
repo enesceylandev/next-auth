@@ -56,6 +56,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
+              data-testid="user-button"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
             >
               <Avatar>
@@ -101,6 +102,7 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="cursor-pointer"
+              data-testid="change-role-button"
               onSelect={event => {
                 event.preventDefault();
                 setIsDialogOpen(true);
@@ -111,6 +113,7 @@ export function NavUser() {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
+              data-testid="logout-button"
               onClick={() => signOut()}
             >
               <LogOut className="mr-2 h-4 w-4" />

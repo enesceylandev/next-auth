@@ -33,7 +33,6 @@ export class RoleConfigService {
     if (!response.ok) {
       throw new Error("Failed to fetch roles");
     }
-
     return response.json();
   }
 

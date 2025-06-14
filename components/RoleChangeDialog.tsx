@@ -34,10 +34,10 @@ export function RoleChangeDialog({
     try {
       setIsLoading(true);
       setChangingRole(newRole);
-
       // Changing the role in server
       const result = await RoleService.changeUserRole(userId, newRole);
       if (!result.success) {
+        console.log("naber");
         throw new Error(result.message);
       }
 
@@ -60,7 +60,12 @@ export function RoleChangeDialog({
           <DialogTitle>Change User Role</DialogTitle>
           <DialogDescription className="flex items-center gap-2">
             <span>Current role:</span>
-            <span className="font-medium text-foreground">{currentRole}</span>
+            <span
+              data-testid="current-role"
+              className="font-medium text-foreground"
+            >
+              {currentRole}
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 py-4">
@@ -70,6 +75,7 @@ export function RoleChangeDialog({
               variant={role === currentRole ? "secondary" : "outline"}
               disabled={isLoading || role === currentRole}
               className="w-full justify-between"
+              data-testid={`change-role-to-${role}`}
               onClick={() => handleRoleChange(role)}
             >
               <span>Switch to {role}</span>
