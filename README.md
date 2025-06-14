@@ -11,13 +11,13 @@ To run the project on your device, follow the steps below:
 1. Clone this repository:
 
    ```bash
-   git clone git@github.com:MedusaCollins/Kizuna.git kizuna
+   git clone git@github.com:enesceylandev/next-auth.git next-auth
    ```
 
 2. Clone this repository:
 
    ```bash
-   cd kizuna 
+   cd next-auth
    ```
 
 3. Install the required dependencies:
@@ -37,8 +37,8 @@ The project will start at `http://localhost:3000`.
 ## Project Structure
 
 ```
-kizuna/
-├── app/                   # Main application directory (Next.js App Router)
+next-auth/
+├── app/                   # Main application directory (Next.js Router)
 ├── components/            # Reusable React components
 ├── cypress/               # Cypress test suite and configurations
 ├── hooks/                 # Custom React hooks
